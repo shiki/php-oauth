@@ -262,7 +262,7 @@ class OAuthRequest {
       $parameters = OAuthUtil::parse_parameters($_SERVER['QUERY_STRING']);
 
       // It's a POST request of the proper content-type, so parse POST
-      // parameters and add those overriding any duplicates from GET
+      // parameters and add those overriding any duplicates from GET      
       if ($http_method == "POST"
           &&  isset($request_headers['Content-Type'])
           && strstr($request_headers['Content-Type'],
@@ -272,6 +272,11 @@ class OAuthRequest {
           file_get_contents(self::$POST_INPUT)
         );
         $parameters = array_merge($parameters, $post_data);
+      } elseif ($http_method == 'POST'
+          && isset($request_headers['Content-Type'])
+          && strstr($request_headers['Content-Type'], 'multipart/form-data')) {
+
+        $parameters = array_merge($parameters, $_POST);
       }
 
       // We have a Authorization-header with OAuth data. Parse the header
