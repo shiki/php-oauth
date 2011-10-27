@@ -421,13 +421,14 @@ class OAuthRequest {
   /**
    * builds the Authorization: header
    */
-  public function to_header($realm=null) {
+  public function to_header($realm=null, $includeName = true) {
     $first = true;
-	if($realm) {
-      $out = 'Authorization: OAuth realm="' . OAuthUtil::urlencode_rfc3986($realm) . '"';
+    $out = $includeName ? 'Authorization: ' : '';
+  if($realm) {
+      $out .= 'OAuth realm="' . OAuthUtil::urlencode_rfc3986($realm) . '"';
       $first = false;
     } else
-      $out = 'Authorization: OAuth';
+      $out .= 'OAuth';
 
     $total = array();
     foreach ($this->parameters as $k => $v) {
