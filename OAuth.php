@@ -555,6 +555,18 @@ class OAuthServer {
     return array($consumer, $token);
   }
 
+  /**
+   * From http://code.google.com/p/oauth/issues/detail?id=188#c1
+   */
+  public function verify_request_two_legged(&$request) {
+    $this->get_version($request);
+    $consumer = $this->get_consumer($request);
+    // no token required for two-legged request
+    $token = NULL;
+    $this->check_signature($request, $consumer, $token);
+    return array($consumer, $token);
+  }
+
   // Internals from here
   /**
    * version 1
@@ -562,7 +574,7 @@ class OAuthServer {
   private function get_version(&$request) {
     $version = $request->get_parameter("oauth_version");
     if (!$version) {
-      // Service Providers MUST assume the protocol version to be 1.0 if this parameter is not present. 
+      // Service Providers MUST assume the protocol version to be 1.0 if this parameter is not present.
       // Chapter 7.0 ("Accessing Protected Ressources")
       $version = '1.0';
     }
