@@ -637,12 +637,18 @@ class OAuthServer {
          ? $request->get_parameter('oauth_token')
          : NULL;
 
-    $token = $this->data_store->lookup_token(
-      $consumer, $token_type, $token_field
-    );
-    if (!$token) {
-      throw new OAuthException("Invalid $token_type token: $token_field");
+    // changes from http://drupalcode.org/project/oauth.git/commitdiff/b969757d5d6fb52f66560eea10a7299f1d81729b?hp=30741c8812e480ae63f2c7fc220c0981d631996a
+    if (!empty($token_field)) {
+      $token = $this->data_store->lookup_token(
+        $consumer, $token_type, $token_field
+      );
+      if (!$token) {
+        throw new OAuthException("Invalid $token_type token: $token_field");
+      }
+    } else {
+      $token = null;
     }
+    
     return $token;
   }
 
