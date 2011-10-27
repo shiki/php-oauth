@@ -1,6 +1,7 @@
 <?php
 // vim: foldmethod=marker
 
+
 /* Generic exception class
  */
 class OAuthException extends Exception {
@@ -85,30 +86,14 @@ abstract class OAuthSignatureMethod {
    */
   public function check_signature($request, $consumer, $token, $signature) {
     $built = $this->build_signature($request, $consumer, $token);
-
-    // Check for zero length, although unlikely here
-    if (strlen($built) == 0 || strlen($signature) == 0) {
-      return false;
-    }
-
-    if (strlen($built) != strlen($signature)) {
-      return false;
-    }
-
-    // Avoid a timing leak with a (hopefully) time insensitive compare
-    $result = 0;
-    for ($i = 0; $i < strlen($signature); $i++) {
-      $result |= ord($built{$i}) ^ ord($signature{$i});
-    }
-
-    return $result == 0;
+    return $built == $signature;
   }
 }
 
 /**
- * The HMAC-SHA1 signature method uses the HMAC-SHA1 signature algorithm as defined in [RFC2104] 
- * where the Signature Base String is the text and the key is the concatenated values (each first 
- * encoded per Parameter Encoding) of the Consumer Secret and Token Secret, separated by an '&' 
+ * The HMAC-SHA1 signature method uses the HMAC-SHA1 signature algorithm as defined in [RFC2104]
+ * where the Signature Base String is the text and the key is the concatenated values (each first
+ * encoded per Parameter Encoding) of the Consumer Secret and Token Secret, separated by an '&'
  * character (ASCII code 38) even if empty.
  *   - Chapter 9.2 ("HMAC-SHA1")
  */
@@ -134,7 +119,7 @@ class OAuthSignatureMethod_HMAC_SHA1 extends OAuthSignatureMethod {
 }
 
 /**
- * The PLAINTEXT method does not provide any security protection and SHOULD only be used 
+ * The PLAINTEXT method does not provide any security protection and SHOULD only be used
  * over a secure channel such as HTTPS. It does not use the Signature Base String.
  *   - Chapter 9.4 ("PLAINTEXT")
  */
@@ -144,8 +129,8 @@ class OAuthSignatureMethod_PLAINTEXT extends OAuthSignatureMethod {
   }
 
   /**
-   * oauth_signature is set to the concatenated encoded values of the Consumer Secret and 
-   * Token Secret, separated by a '&' character (ASCII code 38), even if either secret is 
+   * oauth_signature is set to the concatenated encoded values of the Consumer Secret and
+   * Token Secret, separated by a '&' character (ASCII code 38), even if either secret is
    * empty. The result MUST be encoded again.
    *   - Chapter 9.4.1 ("Generating Signatures")
    *
@@ -167,10 +152,10 @@ class OAuthSignatureMethod_PLAINTEXT extends OAuthSignatureMethod {
 }
 
 /**
- * The RSA-SHA1 signature method uses the RSASSA-PKCS1-v1_5 signature algorithm as defined in 
- * [RFC3447] section 8.2 (more simply known as PKCS#1), using SHA-1 as the hash function for 
- * EMSA-PKCS1-v1_5. It is assumed that the Consumer has provided its RSA public key in a 
- * verified way to the Service Provider, in a manner which is beyond the scope of this 
+ * The RSA-SHA1 signature method uses the RSASSA-PKCS1-v1_5 signature algorithm as defined in
+ * [RFC3447] section 8.2 (more simply known as PKCS#1), using SHA-1 as the hash function for
+ * EMSA-PKCS1-v1_5. It is assumed that the Consumer has provided its RSA public key in a
+ * verified way to the Service Provider, in a manner which is beyond the scope of this
  * specification.
  *   - Chapter 9.3 ("RSA-SHA1")
  */
@@ -399,7 +384,7 @@ class OAuthRequest {
 
     $scheme = (isset($parts['scheme'])) ? $parts['scheme'] : 'http';
     $port = (isset($parts['port'])) ? $parts['port'] : (($scheme == 'https') ? '443' : '80');
-    $host = (isset($parts['host'])) ? strtolower($parts['host']) : '';
+    $host = (isset($parts['host'])) ? $parts['host'] : '';
     $path = (isset($parts['path'])) ? $parts['path'] : '';
 
     if (($scheme == 'https' && $port != '443')
@@ -585,7 +570,7 @@ class OAuthServer {
    * figure out the signature with some defaults
    */
   private function get_signature_method($request) {
-    $signature_method = $request instanceof OAuthRequest 
+    $signature_method = $request instanceof OAuthRequest
         ? $request->get_parameter("oauth_signature_method")
         : NULL;
 
@@ -610,7 +595,7 @@ class OAuthServer {
    * try to find the consumer for the provided request's consumer key
    */
   private function get_consumer($request) {
-    $consumer_key = $request instanceof OAuthRequest 
+    $consumer_key = $request instanceof OAuthRequest
         ? $request->get_parameter("oauth_consumer_key")
         : NULL;
 
@@ -682,7 +667,7 @@ class OAuthServer {
       throw new OAuthException(
         'Missing timestamp parameter. The parameter is required'
       );
-    
+
     // verify that timestamp is recentish
     $now = time();
     if (abs($now - $timestamp) > $this->timestamp_threshold) {
