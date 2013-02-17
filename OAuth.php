@@ -1,10 +1,11 @@
 <?php
 // vim: foldmethod=marker
 
+namespace OAuth;
 
 /* Generic exception class
  */
-class OAuthException extends Exception {
+class OAuthException extends \Exception {
   // pass
 }
 
@@ -244,7 +245,7 @@ class OAuthRequest {
               ? 'http'
               : 'https';
     $http_url = ($http_url) ? $http_url : $scheme .
-                              '://' . (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $_SERVER['SERVER_NAME']) .
+                              '://' . $_SERVER['SERVER_NAME'] .
                               ':' .
                               $_SERVER['SERVER_PORT'] .
                               $_SERVER['REQUEST_URI'];
@@ -262,7 +263,7 @@ class OAuthRequest {
       $parameters = OAuthUtil::parse_parameters($_SERVER['QUERY_STRING']);
 
       // It's a POST request of the proper content-type, so parse POST
-      // parameters and add those overriding any duplicates from GET      
+      // parameters and add those overriding any duplicates from GET
       if ($http_method == "POST"
           &&  isset($request_headers['Content-Type'])
           && strstr($request_headers['Content-Type'],
@@ -648,7 +649,7 @@ class OAuthServer {
     } else {
       $token = null;
     }
-    
+
     return $token;
   }
 
@@ -753,7 +754,7 @@ class OAuthDataStore {
 class OAuthUtil {
   public static function urlencode_rfc3986($input) {
   if (is_array($input)) {
-    return array_map(array('OAuthUtil', 'urlencode_rfc3986'), $input);
+    return array_map(array('OAuth\OAuthUtil', 'urlencode_rfc3986'), $input);
   } else if (is_scalar($input)) {
     return str_replace(
       '+',
@@ -900,3 +901,4 @@ class OAuthUtil {
     return implode('&', $pairs);
   }
 }
+
