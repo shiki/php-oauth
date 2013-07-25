@@ -1,0 +1,11 @@
+{
+  "name": "shiki/oauth",
+  "type": "library",
+  "description": "An OAuth 1.0 implementation for PHP based on the PHP library in http://code.google.com/p/oauth/",
+  "keywords": ["oauth"],
+  "homepage": "https://github.com/shiki/php-oauth",
+  "license": "MIT",
+  "autoload": {
+    "files": ["OAuth.php"]
+  }
+}
