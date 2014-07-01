@@ -219,36 +219,38 @@ abstract class OAuthSignatureMethod_RSA_SHA1 extends OAuthSignatureMethod {
   }
 }
 
-class OAuthRequest {
-  protected $parameters;
-  protected $http_method;
-  protected $http_url;
-  // for debug purposes
-  public $base_string;
-  public static $version = '1.0';
+/**
+ * Class OAuthRequestParser
+ *
+ * @package OAuth
+ */
+class OAuthRequestFactory {
   public static $POST_INPUT = 'php://input';
 
-  function __construct($http_method, $http_url, $parameters=NULL) {
-    $parameters = ($parameters) ? $parameters : array();
-    $parameters = array_merge( OAuthUtil::parse_parameters(parse_url($http_url, PHP_URL_QUERY)), $parameters);
-    $this->parameters = $parameters;
-    $this->http_method = $http_method;
-    $this->http_url = $http_url;
+  protected function get_params_from_post_input() {
+    $post_data = OAuthUtil::parse_parameters(
+      file_get_contents(self::$POST_INPUT)
+    );
+    return $post_data;
   }
 
-
   /**
-   * attempt to build up a request from what was passed to the server
+   * Attempt to build up a request from what was passed to the server
+   * @param string $http_method
+   * @param string $http_url
+   * @param array $parameters
+   *
+   * @return OAuthRequest
    */
-  public static function from_request($http_method=NULL, $http_url=NULL, $parameters=NULL) {
+  public function build_from_request($http_method=NULL, $http_url=NULL, $parameters=NULL) {
     $scheme = (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] != "on")
-              ? 'http'
-              : 'https';
+      ? 'http'
+      : 'https';
     $http_url = ($http_url) ? $http_url : $scheme .
-                              '://' . $_SERVER['SERVER_NAME'] .
-                              ':' .
-                              $_SERVER['SERVER_PORT'] .
-                              $_SERVER['REQUEST_URI'];
+      '://' . $_SERVER['SERVER_NAME'] .
+      ':' .
+      $_SERVER['SERVER_PORT'] .
+      $_SERVER['REQUEST_URI'];
     $http_method = ($http_method) ? $http_method : $_SERVER['REQUEST_METHOD'];
 
     // We weren't handed any parameters, so let's find the ones relevant to
@@ -265,17 +267,16 @@ class OAuthRequest {
       // It's a POST request of the proper content-type, so parse POST
       // parameters and add those overriding any duplicates from GET
       if ($http_method == "POST"
-          &&  isset($request_headers['Content-Type'])
-          && strstr($request_headers['Content-Type'],
-                     'application/x-www-form-urlencoded')
-          ) {
-        $post_data = OAuthUtil::parse_parameters(
-          file_get_contents(self::$POST_INPUT)
-        );
+        &&  isset($request_headers['Content-Type'])
+        && strstr($request_headers['Content-Type'],
+          'application/x-www-form-urlencoded')
+      ) {
+
+        $post_data = $this->get_params_from_post_input();
         $parameters = array_merge($parameters, $post_data);
       } elseif ($http_method == 'POST'
-          && isset($request_headers['Content-Type'])
-          && strstr($request_headers['Content-Type'], 'multipart/form-data')) {
+        && isset($request_headers['Content-Type'])
+        && strstr($request_headers['Content-Type'], 'multipart/form-data')) {
 
         $parameters = array_merge($parameters, $_POST);
       }
@@ -292,6 +293,31 @@ class OAuthRequest {
     }
 
     return new OAuthRequest($http_method, $http_url, $parameters);
+  }
+}
+
+class OAuthRequest {
+  protected $parameters;
+  protected $http_method;
+  protected $http_url;
+  // for debug purposes
+  public $base_string;
+  public static $version = '1.0';
+
+  function __construct($http_method, $http_url, $parameters=NULL) {
+    $parameters = ($parameters) ? $parameters : array();
+    $parameters = array_merge( OAuthUtil::parse_parameters(parse_url($http_url, PHP_URL_QUERY)), $parameters);
+    $this->parameters = $parameters;
+    $this->http_method = $http_method;
+    $this->http_url = $http_url;
+  }
+
+  /**
+   * attempt to build up a request from what was passed to the server
+   */
+  public static function from_request($http_method=NULL, $http_url=NULL, $parameters=NULL) {
+    $factory = new OAuthRequestFactory();
+    return $factory->build_from_request($http_method, $http_url, $parameters);
   }
 
   /**
